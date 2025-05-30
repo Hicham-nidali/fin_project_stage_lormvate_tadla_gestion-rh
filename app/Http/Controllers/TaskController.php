@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
     public function index()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $tasks = Task::where('department_id', $departmentId)
                     ->with(['assignedTo', 'assignedBy'])
@@ -24,9 +29,13 @@ class TaskController extends Controller
     
     public function create()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $team = User::where('department_id', $departmentId)->get();
         
@@ -43,8 +52,8 @@ class TaskController extends Controller
             'due_date' => 'required|date',
         ]);
         
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
         
         Task::create([
@@ -70,8 +79,8 @@ class TaskController extends Controller
     
     public function edit($id)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
         
         $task = Task::findOrFail($id);

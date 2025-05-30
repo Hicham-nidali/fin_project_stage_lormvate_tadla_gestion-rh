@@ -9,8 +9,11 @@ class EmployeeTaskController extends Controller
 {
     public function index(Request $request)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $status = $request->input('status');
         
@@ -28,8 +31,11 @@ class EmployeeTaskController extends Controller
     
     public function show($id)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $task = Task::findOrFail($id);
         
@@ -44,8 +50,11 @@ class EmployeeTaskController extends Controller
     
     public function updateStatus(Request $request, $id)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $task = Task::findOrFail($id);
         

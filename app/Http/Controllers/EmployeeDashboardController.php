@@ -10,11 +10,19 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeDashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        // Pour la démo, on simule un employé connecté
-        // Dans une vraie app, on utiliserait Auth::user()
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        // Redirection automatique si pas employé
+        if (!$employee || $employee->role !== 'employee') {
+            return $this->redirectByRole($employee);
+        }
         
         $pendingTasks = Task::where('assigned_to', $employee->id)
                            ->whereIn('status', ['pending', 'in_progress'])
@@ -46,5 +54,21 @@ class EmployeeDashboardController extends Controller
             'todayAttendance',
             'recentMessages'
         ));
+    }
+    
+    private function redirectByRole($user)
+    {
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Veuillez vous connecter');
+        }
+        
+        switch ($user->role) {
+            case 'hr_admin':
+                return redirect()->route('hr.dashboard');
+            case 'department_head':
+                return redirect()->route('dashboard');
+            default:
+                return redirect()->route('login')->with('error', 'Rôle non reconnu');
+        }
     }
 }

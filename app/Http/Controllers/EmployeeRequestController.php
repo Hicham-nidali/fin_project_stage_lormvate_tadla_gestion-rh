@@ -9,8 +9,11 @@ class EmployeeRequestController extends Controller
 {
     public function index()
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $requests = EmployeeRequest::where('user_id', $employee->id)
                                 ->orderBy('created_at', 'desc')
@@ -21,16 +24,22 @@ class EmployeeRequestController extends Controller
     
     public function create()
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         return view('employee.requests.create', compact('employee'));
     }
     
     public function store(Request $request)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $request->validate([
             'title' => 'required',
@@ -53,8 +62,11 @@ class EmployeeRequestController extends Controller
     
     public function show($id)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $employeeRequest = EmployeeRequest::findOrFail($id);
         

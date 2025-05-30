@@ -9,14 +9,19 @@ use App\Models\Task;
 use App\Models\Attendance;
 use App\Models\Evaluation;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $reports = Report::where('department_id', $departmentId)
                         ->with('creator')
@@ -42,8 +47,8 @@ class ReportController extends Controller
             'status' => 'required|in:draft,published',
         ]);
         
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
         
         Report::create([
@@ -93,9 +98,13 @@ class ReportController extends Controller
     
     public function generateMonthlyReport()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();

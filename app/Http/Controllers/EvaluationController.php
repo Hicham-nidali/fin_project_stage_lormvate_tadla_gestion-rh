@@ -6,14 +6,19 @@ use Illuminate\Http\Request;
 use App\Models\Evaluation;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class EvaluationController extends Controller
 {
     public function index()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $evaluations = Evaluation::whereHas('evaluatedUser', function($query) use ($departmentId) {
                 $query->where('department_id', $departmentId);
@@ -26,9 +31,13 @@ class EvaluationController extends Controller
     
     public function create(Request $request)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $userId = $request->input('user_id');
         $user = null;
@@ -59,8 +68,8 @@ class EvaluationController extends Controller
             'status' => 'required|in:draft,published',
         ]);
         
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         
         Evaluation::create([
             'evaluated_user_id' => $request->evaluated_user_id,

@@ -9,8 +9,11 @@ class EmployeeMessageController extends Controller
 {
     public function index()
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $messages = Message::where('department_id', $employee->department_id)
                           ->orWhere('user_id', $employee->id)
@@ -22,8 +25,11 @@ class EmployeeMessageController extends Controller
     
     public function show($id)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $message = Message::findOrFail($id);
         

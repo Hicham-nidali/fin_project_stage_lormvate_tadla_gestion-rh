@@ -6,39 +6,38 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class EmployeeAttendanceController extends Controller
+class DepartmentHeadAttendanceController extends Controller
 {
     public function index()
     {
-        // Utiliser l'utilisateur connecté
-        $employee = Auth::user();
+        $departmentHead = Auth::user();
         
-        if (!$employee || $employee->role !== 'employee') {
+        if (!$departmentHead || $departmentHead->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $employee->id)
+        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
-        return view('employee.attendance.index', compact('employee', 'todayAttendance'));
+        return view('department-head.attendance.index', compact('departmentHead', 'todayAttendance'));
     }
     
     public function checkIn(Request $request)
     {
-        $employee = Auth::user();
+        $departmentHead = Auth::user();
         
-        if (!$employee || $employee->role !== 'employee') {
+        if (!$departmentHead || $departmentHead->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $employee->id)
+        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
         if (!$todayAttendance) {
             $todayAttendance = new Attendance();
-            $todayAttendance->user_id = $employee->id;
+            $todayAttendance->user_id = $departmentHead->id;
             $todayAttendance->date = now()->toDateString();
             $todayAttendance->status = 'present';
         }
@@ -46,19 +45,19 @@ class EmployeeAttendanceController extends Controller
         $todayAttendance->check_in = now();
         $todayAttendance->save();
         
-        return redirect()->route('employee.attendance.index')
+        return redirect()->route('department-head.attendance.index')
                          ->with('success', 'Vous avez pointé votre arrivée avec succès.');
     }
     
     public function checkOut(Request $request)
     {
-        $employee = Auth::user();
+        $departmentHead = Auth::user();
         
-        if (!$employee || $employee->role !== 'employee') {
+        if (!$departmentHead || $departmentHead->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $employee->id)
+        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
@@ -66,30 +65,30 @@ class EmployeeAttendanceController extends Controller
             $todayAttendance->check_out = now();
             $todayAttendance->save();
             
-            return redirect()->route('employee.attendance.index')
+            return redirect()->route('department-head.attendance.index')
                              ->with('success', 'Vous avez pointé votre départ avec succès.');
         }
         
-        return redirect()->route('employee.attendance.index')
+        return redirect()->route('department-head.attendance.index')
                          ->with('error', 'Vous devez d\'abord pointer votre arrivée.');
     }
     
     public function history(Request $request)
     {
-        $employee = Auth::user();
+        $departmentHead = Auth::user();
         
-        if (!$employee || $employee->role !== 'employee') {
+        if (!$departmentHead || $departmentHead->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
         
-        $attendanceHistory = Attendance::where('user_id', $employee->id)
+        $attendanceHistory = Attendance::where('user_id', $departmentHead->id)
                                       ->whereBetween('date', [$startDate, $endDate])
                                       ->orderBy('date', 'desc')
                                       ->get();
         
-        return view('employee.attendance.history', compact('employee', 'attendanceHistory', 'startDate', 'endDate'));
+        return view('department-head.attendance.history', compact('departmentHead', 'attendanceHistory', 'startDate', 'endDate'));
     }
 }

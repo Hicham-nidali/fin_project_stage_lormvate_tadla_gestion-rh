@@ -96,5 +96,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/main.js') }}"></script>
     @yield('scripts')
+    <script>
+// Heartbeat pour maintenir la session active
+setInterval(function() {
+    fetch('/heartbeat', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    }).catch(function() {
+        // En cas d'erreur, rediriger vers login
+        console.log('Session expirée');
+    });
+}, 300000); // Toutes les 5 minutes
+</script>
 </body>
 </html>

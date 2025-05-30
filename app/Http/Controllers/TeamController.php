@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Department;
+use Illuminate\Support\Facades\Auth;
 
 class TeamController extends Controller
 {
     public function index()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $team = User::where('department_id', $departmentId)->get();
         

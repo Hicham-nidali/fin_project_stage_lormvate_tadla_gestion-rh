@@ -7,14 +7,19 @@ use App\Models\Attendance;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $date = $request->input('date', Carbon::today()->toDateString());
         
@@ -34,9 +39,13 @@ class AttendanceController extends Controller
     
     public function report(Request $request)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());

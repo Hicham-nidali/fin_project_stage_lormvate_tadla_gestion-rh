@@ -10,8 +10,11 @@ class EmployeeProfileController extends Controller
 {
     public function index()
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $evaluations = Evaluation::where('evaluated_user_id', $employee->id)
                                 ->orderBy('created_at', 'desc')
@@ -22,16 +25,22 @@ class EmployeeProfileController extends Controller
     
     public function edit()
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         return view('employee.profile.edit', compact('employee'));
     }
     
     public function update(Request $request)
     {
-        // Simuler un employé connecté
-        $employee = \App\Models\User::where('role', 'employee')->first();
+        $employee = Auth::user();
+        
+        if (!$employee || $employee->role !== 'employee') {
+            return redirect()->route('login')->with('error', 'Accès refusé.');
+        }
         
         $request->validate([
             'name' => 'required',

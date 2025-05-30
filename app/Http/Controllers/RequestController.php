@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Request as DepartmentRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class RequestController extends Controller
 {
     public function index()
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $requests = DepartmentRequest::where('department_id', $departmentId)
                                  ->with(['user', 'approver'])
@@ -30,8 +35,8 @@ class RequestController extends Controller
     
     public function approve($id)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         
         $request = DepartmentRequest::findOrFail($id);
         
@@ -47,8 +52,8 @@ class RequestController extends Controller
     
     public function reject($id)
     {
-        // Simulating a department head
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté
+        $departmentHead = Auth::user();
         
         $request = DepartmentRequest::findOrFail($id);
         

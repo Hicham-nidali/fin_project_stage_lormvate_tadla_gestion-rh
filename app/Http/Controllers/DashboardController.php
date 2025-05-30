@@ -14,10 +14,13 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // For now, we'll simulate a department head
-        // In a real app, you'd use Auth::user()
-        $departmentHead = User::where('role', 'department_head')->first();
+        // CORRECTION : Utiliser l'utilisateur connecté au lieu de simuler
+        $departmentHead = Auth::user();
         $departmentId = $departmentHead->department_id;
+        
+        if (!$departmentId) {
+            return redirect()->route('login')->with('error', 'Vous n\'êtes pas assigné à un département.');
+        }
         
         $department = Department::findOrFail($departmentId);
         $totalEmployees = User::where('department_id', $departmentId)->count();
