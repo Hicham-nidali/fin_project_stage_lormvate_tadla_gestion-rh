@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Request as EmployeeRequest;
+use App\Models\OvertimeRecord;
 use Illuminate\Support\Facades\Auth;
 
 class EmployeeRequestController extends Controller
@@ -41,12 +42,29 @@ class EmployeeRequestController extends Controller
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $request->validate([
+        // Validation de base
+        $validationRules = [
             'title' => 'required',
             'description' => 'required',
-            'type' => 'required|in:leave,expense,equipment,other',
-        ]);
+            'type' => 'required|in:leave,expense,equipment,overtime,other',
+        ];
         
+        // Validation spécifique aux heures supplémentaires
+        if ($request->type === 'overtime') {
+            $validationRules = array_merge($validationRules, [
+                'overtime_date' => 'required|date',
+                'start_time' => 'required',
+                'end_time' => 'required|after:start_time',
+                'hours_requested' => 'required|numeric|min:0.5|max:12',
+                'overtime_reason' => 'required',
+                'overtime_type' => 'required|in:planned,urgent,project',
+                'overtime_rate' => 'required|numeric|in:1.25,1.5,2'
+            ]);
+        }
+        
+        $request->validate($validationRules);
+        
+        // Créer la demande principale
         $employeeRequest = new EmployeeRequest();
         $employeeRequest->title = $request->title;
         $employeeRequest->description = $request->description;
@@ -55,6 +73,31 @@ class EmployeeRequestController extends Controller
         $employeeRequest->user_id = $employee->id;
         $employeeRequest->department_id = $employee->department_id;
         $employeeRequest->save();
+        
+        // Si c'est une demande d'heures supplémentaires, créer l'enregistrement overtime
+        if ($request->type === 'overtime') {
+            $overtimeRecord = new OvertimeRecord();
+            $overtimeRecord->request_id = $employeeRequest->id;
+            $overtimeRecord->user_id = $employee->id;
+            $overtimeRecord->department_id = $employee->department_id;
+            $overtimeRecord->overtime_date = $request->overtime_date;
+            $overtimeRecord->start_time = $request->start_time;
+            $overtimeRecord->end_time = $request->end_time;
+            $overtimeRecord->hours_requested = $request->hours_requested;
+            $overtimeRecord->reason = $request->overtime_reason;
+            $overtimeRecord->status = 'pending';
+            
+            // Stocker les métadonnées dans le champ description de la demande principale
+            $metadata = [
+                'overtime_type' => $request->overtime_type,
+                'overtime_rate' => $request->overtime_rate,
+                'original_description' => $request->description
+            ];
+            $employeeRequest->description = json_encode($metadata);
+            $employeeRequest->save();
+            
+            $overtimeRecord->save();
+        }
         
         return redirect()->route('employee.requests.index')
                          ->with('success', 'Demande soumise avec succès.');
@@ -76,6 +119,12 @@ class EmployeeRequestController extends Controller
                              ->with('error', 'Vous n\'êtes pas autorisé à voir cette demande.');
         }
         
-        return view('employee.requests.show', compact('employee', 'employeeRequest'));
+        // Charger les données d'heures supplémentaires si applicable
+        $overtimeRecord = null;
+        if ($employeeRequest->type === 'overtime') {
+            $overtimeRecord = OvertimeRecord::where('request_id', $employeeRequest->id)->first();
+        }
+        
+        return view('employee.requests.show', compact('employee', 'employeeRequest', 'overtimeRecord'));
     }
 }

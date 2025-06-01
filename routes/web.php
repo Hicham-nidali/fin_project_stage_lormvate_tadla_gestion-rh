@@ -12,6 +12,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\DepartmentHeadAttendanceController;
 use App\Http\Controllers\HRAttendanceController;
+use App\Http\Controllers\EvaluationReportController;
+use App\Http\Controllers\HREvaluationReportController;
 
 // Redirection racine
 Route::get('/', function () {
@@ -54,6 +56,7 @@ Route::middleware(['auth', \App\Http\Middleware\HRAdminMiddleware::class])->pref
     Route::post('/users', [HRAdminController::class, 'usersStore'])->name('users.store');
     Route::get('/users/{id}/edit', [HRAdminController::class, 'usersEdit'])->name('users.edit');
     Route::put('/users/{id}', [HRAdminController::class, 'usersUpdate'])->name('users.update');
+    Route::delete('/users/{id}', [HRAdminController::class, 'usersDestroy'])->name('users.destroy');
     
     // Actions d'assignation
     Route::post('/assign-employee', [HRAdminController::class, 'assignEmployee'])->name('assign-employee');
@@ -64,6 +67,15 @@ Route::middleware(['auth', \App\Http\Middleware\HRAdminMiddleware::class])->pref
     Route::post('/attendance/check-in', [HRAttendanceController::class, 'checkIn'])->name('attendance.check-in');
     Route::post('/attendance/check-out', [HRAttendanceController::class, 'checkOut'])->name('attendance.check-out');
     Route::get('/attendance/history', [HRAttendanceController::class, 'history'])->name('attendance.history');
+    
+    // 🆕 RAPPORTS D'ÉVALUATION - ADMINISTRATION RH
+    Route::prefix('evaluation-reports')->name('evaluation-reports.')->group(function () {
+        Route::get('/', [HREvaluationReportController::class, 'index'])->name('index');
+        Route::get('/dashboard', [HREvaluationReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/{id}', [HREvaluationReportController::class, 'show'])->name('show');
+        Route::get('/{id}/review', [HREvaluationReportController::class, 'review'])->name('review');
+        Route::post('/{id}/review', [HREvaluationReportController::class, 'storeReview'])->name('store-review');
+    });
 });
 
 // ===================
@@ -97,11 +109,31 @@ Route::middleware(['auth', \App\Http\Middleware\DepartmentHeadMiddleware::class]
     Route::resource('reports', ReportController::class);
     Route::get('/reports/generate/monthly', [ReportController::class, 'generateMonthlyReport'])->name('reports.generate.monthly');
     
+    // 🆕 RAPPORTS D'ÉVALUATION - CHEF DE DÉPARTEMENT
+    Route::prefix('evaluation-reports')->name('evaluation-reports.')->group(function () {
+        Route::get('/', [EvaluationReportController::class, 'index'])->name('index');
+        Route::get('/create', [EvaluationReportController::class, 'create'])->name('create');
+        Route::post('/store', [EvaluationReportController::class, 'store'])->name('store');
+        Route::get('/{id}', [EvaluationReportController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [EvaluationReportController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EvaluationReportController::class, 'update'])->name('update');
+        Route::post('/{id}/send', [EvaluationReportController::class, 'send'])->name('send');
+    });
+    
     // Demandes
     Route::get('/requests', [RequestController::class, 'index'])->name('requests.index');
     Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
     Route::post('/requests/{id}/approve', [RequestController::class, 'approve'])->name('requests.approve');
     Route::post('/requests/{id}/reject', [RequestController::class, 'reject'])->name('requests.reject');
+    
+    // 🆕 HEURES SUPPLÉMENTAIRES - CHEF DE DÉPARTEMENT
+    Route::prefix('overtime')->name('overtime.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\OvertimeController::class, 'index'])->name('index');
+        Route::get('/report', [\App\Http\Controllers\OvertimeController::class, 'report'])->name('report');
+        Route::get('/{id}', [\App\Http\Controllers\OvertimeController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [\App\Http\Controllers\OvertimeController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\OvertimeController::class, 'reject'])->name('reject');
+    });
 });
 
 // ===================
@@ -135,4 +167,13 @@ Route::middleware(['auth'])->prefix('employee')->name('employee.')->group(functi
     // Messages
     Route::get('/messages', [\App\Http\Controllers\EmployeeMessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{id}', [\App\Http\Controllers\EmployeeMessageController::class, 'show'])->name('messages.show');
+    
+    // 🆕 HEURES SUPPLÉMENTAIRES - EMPLOYÉS
+    Route::prefix('overtime')->name('overtime.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EmployeeOvertimeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\EmployeeOvertimeController::class, 'create'])->name('create');
+        Route::post('/store', [\App\Http\Controllers\EmployeeOvertimeController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\EmployeeOvertimeController::class, 'show'])->name('show');
+        Route::get('/history', [\App\Http\Controllers\EmployeeOvertimeController::class, 'history'])->name('history');
+    });
 });

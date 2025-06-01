@@ -359,4 +359,31 @@ class HRAdminController extends Controller
             'employees' => User::where('role', 'employee')->count(),
         ];
     }
+    public function usersDestroy($id)
+{
+    $user = User::findOrFail($id);
+    
+    // Empêcher la suppression des admins RH
+    if ($user->role === 'hr_admin') {
+        return back()->with('error', 'Impossible de supprimer un administrateur RH');
+    }
+    
+    try {
+        DB::beginTransaction();
+        
+        // Si c'est un chef de département, retirer la référence
+        if ($user->role === 'department_head') {
+            Department::where('head_id', $user->id)->update(['head_id' => null]);
+        }
+        
+        $user->delete();
+        
+        DB::commit();
+        return redirect()->route('hr.users.index')
+                       ->with('success', 'Utilisateur supprimé avec succès');
+    } catch (\Exception $e) {
+        DB::rollback();
+        return back()->with('error', 'Erreur lors de la suppression de l\'utilisateur');
+    }
+}
 }

@@ -33,6 +33,8 @@
                                     <span class="badge bg-warning">Remboursement</span>
                                 @elseif($request->type == 'equipment')
                                     <span class="badge bg-primary">Équipement</span>
+                                @elseif($request->type == 'overtime')
+                                    <span class="badge bg-purple">Heures supplémentaires</span>
                                 @else
                                     <span class="badge bg-secondary">Autre</span>
                                 @endif
@@ -98,18 +100,20 @@
     const typeChart = new Chart(typeCtx, {
         type: 'pie',
         data: {
-            labels: ['Congé', 'Remboursement', 'Équipement', 'Autre'],
+            labels: ['Congé', 'Remboursement', 'Équipement', 'Heures supplémentaires', 'Autre'],
             datasets: [{
                 data: [
                     {{ $requests->where('type', 'leave')->count() }},
                     {{ $requests->where('type', 'expense')->count() }},
                     {{ $requests->where('type', 'equipment')->count() }},
+                    {{ $requests->where('type', 'overtime')->count() }},
                     {{ $requests->where('type', 'other')->count() }}
                 ],
                 backgroundColor: [
                     'rgba(23, 162, 184, 0.8)',
                     'rgba(255, 193, 7, 0.8)',
                     'rgba(0, 123, 255, 0.8)',
+                    'rgba(128, 0, 128, 0.8)',
                     'rgba(108, 117, 125, 0.8)'
                 ]
             }]

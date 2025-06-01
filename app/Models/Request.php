@@ -32,4 +32,8 @@ class Request extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+    public function overtimeRecord()
+{
+    return $this->hasOne(OvertimeRecord::class);
+}
 }

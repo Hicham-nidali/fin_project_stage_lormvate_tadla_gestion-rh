@@ -19,6 +19,8 @@
                     <span class="badge bg-warning">Remboursement</span>
                 @elseif($employeeRequest->type == 'equipment')
                     <span class="badge bg-primary">Équipement</span>
+                @elseif($employeeRequest->type == 'overtime')
+                    <span class="badge bg-purple">Heures supplémentaires</span>
                 @else
                     <span class="badge bg-secondary">Autre</span>
                 @endif
@@ -33,8 +35,80 @@
             </span>
         </div>
         <div class="card-body">
-            <h6 class="mb-3">Description de la demande</h6>
-            <p>{{ $employeeRequest->description }}</p>
+            @if($employeeRequest->type == 'overtime' && $overtimeRecord)
+                <!-- Affichage spécial pour les heures supplémentaires -->
+                <h6 class="mb-3">Détails des heures supplémentaires</h6>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Date:</span>
+                                <span>{{ $overtimeRecord->overtime_date->format('d/m/Y') }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Horaires:</span>
+                                <span>{{ \Carbon\Carbon::parse($overtimeRecord->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtimeRecord->end_time)->format('H:i') }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Heures demandées:</span>
+                                <span class="fw-bold">{{ $overtimeRecord->hours_requested }}h</span>
+                            </li>
+                            @if($overtimeRecord->hours_approved)
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Heures approuvées:</span>
+                                <span class="fw-bold text-success">{{ $overtimeRecord->hours_approved }}h</span>
+                            </li>
+                            @endif
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            @php
+                                $metadata = json_decode($employeeRequest->description, true);
+                                $overtimeType = is_array($metadata) ? ($metadata['overtime_type'] ?? 'Non spécifié') : 'Non spécifié';
+                                $overtimeRate = is_array($metadata) ? ($metadata['overtime_rate'] ?? 1.25) : 1.25;
+                            @endphp
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Type:</span>
+                                <span>
+                                    @if($overtimeType == 'planned')
+                                        <span class="badge bg-info">Planifiées</span>
+                                    @elseif($overtimeType == 'urgent')
+                                        <span class="badge bg-warning">Urgentes</span>
+                                    @elseif($overtimeType == 'project')
+                                        <span class="badge bg-primary">Projet</span>
+                                    @else
+                                        {{ $overtimeType }}
+                                    @endif
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Taux de majoration:</span>
+                                <span>{{ ($overtimeRate * 100) }}%</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Statut:</span>
+                                <span>
+                                    @if($overtimeRecord->status == 'pending')
+                                        <span class="badge bg-warning">En attente</span>
+                                    @elseif($overtimeRecord->status == 'approved')
+                                        <span class="badge bg-success">Approuvé</span>
+                                    @else
+                                        <span class="badge bg-danger">Rejeté</span>
+                                    @endif
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3">Raison des heures supplémentaires</h6>
+                <p class="border p-3 bg-light rounded">{{ $overtimeRecord->reason }}</p>
+            @else
+                <!-- Affichage normal pour les autres types de demandes -->
+                <h6 class="mb-3">Description de la demande</h6>
+                <p>{{ $employeeRequest->description }}</p>
+            @endif
             
             <hr>
             
@@ -44,7 +118,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span>Date de soumission:</span>
-                            <span>{{ $employeeRequest->created_at->format('d/m/Y') }}</span>
+                            <span>{{ $employeeRequest->created_at->format('d/m/Y H:i') }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span>Département:</span>
@@ -53,7 +127,7 @@
                         @if($employeeRequest->approved_at)
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span>Date de réponse:</span>
-                            <span>{{ $employeeRequest->approved_at->format('d/m/Y') }}</span>
+                            <span>{{ $employeeRequest->approved_at->format('d/m/Y H:i') }}</span>
                         </li>
                         @endif
                         @if($employeeRequest->approver)
@@ -65,50 +139,34 @@
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <h6>Fichiers joints</h6>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item px-0">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-file-pdf text-danger me-2"></i>
-                                <div>
-                                    <div>Justificatif.pdf</div>
-                                    <small class="text-muted">Ajouté le {{ $employeeRequest->created_at->format('d/m/Y') }}</small>
-                                </div>
-                                <a href="#" class="btn btn-sm btn-outline-primary ms-auto">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </div>
-                        </li>
-                        
-                        @if($employeeRequest->type == 'expense')
-                        <li class="list-group-item px-0">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-file-image text-primary me-2"></i>
-                                <div>
-                                    <div>Facture.jpg</div>
-                                    <small class="text-muted">Ajouté le {{ $employeeRequest->created_at->format('d/m/Y') }}</small>
-                                </div>
-                                <a href="#" class="btn btn-sm btn-outline-primary ms-auto">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </div>
-                        </li>
+                    <h6>Actions</h6>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary">
+                            <i class="fas fa-print me-2"></i>Imprimer
+                        </button>
+                        @if($employeeRequest->status == 'pending')
+                        <button type="button" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit me-2"></i>Modifier (bientôt)
+                        </button>
                         @endif
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="card-footer bg-white">
             @if($employeeRequest->status == 'pending')
-                <div class="alert alert-warning">
+                <div class="alert alert-warning mb-0">
                     <i class="fas fa-clock me-2"></i>Votre demande est en cours d'examen par votre responsable.
                 </div>
             @elseif($employeeRequest->status == 'approved')
-                <div class="alert alert-success">
+                <div class="alert alert-success mb-0">
                     <i class="fas fa-check-circle me-2"></i>Votre demande a été approuvée le {{ $employeeRequest->approved_at->format('d/m/Y') }} par {{ $employeeRequest->approver->name }}.
+                    @if($employeeRequest->type == 'overtime' && $overtimeRecord && $overtimeRecord->hours_approved)
+                        <br><strong>{{ $overtimeRecord->hours_approved }}h d'heures supplémentaires approuvées.</strong>
+                    @endif
                 </div>
             @else
-                <div class="alert alert-danger">
+                <div class="alert alert-danger mb-0">
                     <i class="fas fa-times-circle me-2"></i>Votre demande a été rejetée le {{ $employeeRequest->approved_at->format('d/m/Y') }} par {{ $employeeRequest->approver->name }}.
                 </div>
             @endif

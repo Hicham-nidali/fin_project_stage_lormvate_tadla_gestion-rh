@@ -32,4 +32,33 @@ class Department extends Model
     {
         return $this->hasMany(Report::class);
     }
+
+    // 🆕 Relation avec les rapports d'évaluation
+    public function evaluationReports()
+    {
+        return $this->hasMany(EvaluationReport::class);
+    }
+
+    // 🆕 Méthodes utilitaires pour les rapports d'évaluation
+    public function getLatestEvaluationReport()
+    {
+        return $this->evaluationReports()
+                   ->where('status', '!=', 'draft')
+                   ->latest('sent_at')
+                   ->first();
+    }
+
+    public function getPendingEvaluationReportsCount()
+    {
+        return $this->evaluationReports()
+                   ->where('status', 'sent')
+                   ->count();
+    }
+
+    public function getReviewedEvaluationReportsCount()
+    {
+        return $this->evaluationReports()
+                   ->where('status', 'reviewed')
+                   ->count();
+    }
 }

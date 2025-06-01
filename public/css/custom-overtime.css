@@ -1,0 +1,139 @@
+/* Ajout de styles personnalisés pour les heures supplémentaires */
+
+/* Badge purple pour les heures supplémentaires */
+.badge.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white;
+}
+
+.badge.bg-purple:hover {
+    background-color: #5a359c !important;
+}
+
+/* Style pour les cartes d'heures supplémentaires */
+.overtime-card {
+    border-left: 4px solid #6f42c1;
+}
+
+.overtime-card:hover {
+    box-shadow: 0 4px 8px rgba(111, 66, 193, 0.2);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* Style pour les indicateurs d'heures */
+.hours-indicator {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #6f42c1;
+}
+
+/* Style pour les statistiques d'heures supplémentaires */
+.overtime-stats {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a359c 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+/* Style pour les tables d'heures supplémentaires */
+.overtime-table .table th {
+    background-color: #f8f9fa;
+    border-top: 2px solid #6f42c1;
+}
+
+.overtime-table .table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+
+/* Animation pour les nouveaux enregistrements */
+.new-overtime-record {
+    animation: highlightNew 3s ease-in-out;
+}
+
+@keyframes highlightNew {
+    0% { background-color: rgba(111, 66, 193, 0.3); }
+    100% { background-color: transparent; }
+}
+
+/* Style pour les alertes d'heures supplémentaires */
+.alert-overtime {
+    background-color: rgba(111, 66, 193, 0.1);
+    border: 1px solid rgba(111, 66, 193, 0.3);
+    color: #6f42c1;
+}
+
+/* Style pour les boutons d'action des heures supplémentaires */
+.btn-overtime {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: white;
+}
+
+.btn-overtime:hover {
+    background-color: #5a359c;
+    border-color: #5a359c;
+    color: white;
+}
+
+/* Style responsive pour les cartes d'heures supplémentaires */
+@media (max-width: 768px) {
+    .overtime-card {
+        margin-bottom: 15px;
+    }
+    
+    .hours-indicator {
+        font-size: 1em;
+    }
+}
+
+/* Style pour les graphiques d'heures supplémentaires */
+.overtime-chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+/* Style pour les formulaires d'heures supplémentaires */
+.overtime-form {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.overtime-form .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.overtime-form .form-control:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* Style pour les rapports d'heures supplémentaires */
+.overtime-report-summary {
+    background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.overtime-summary-item {
+    text-align: center;
+    padding: 15px;
+}
+
+.overtime-summary-item h3 {
+    color: #6f42c1;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.overtime-summary-item p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0;
+}

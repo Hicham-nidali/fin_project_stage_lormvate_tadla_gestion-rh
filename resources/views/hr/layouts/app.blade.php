@@ -3,31 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration RH</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Système de Gestion - Administration RH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ asset('css/main.css') }}">
 </head>
 <body>
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->
-        <div class="bg-warning" id="sidebar-wrapper">
-            <div class="sidebar-heading text-dark text-center py-4">
-                <h4><i class="fas fa-users-cog me-2"></i>Administration RH</h4>
+        <div class="bg-dark" id="sidebar-wrapper">
+            <div class="sidebar-heading text-white text-center py-4">
+                <h4>Administration RH</h4>
             </div>
             <div class="list-group list-group-flush">
-                <a href="{{ route('hr.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-dark {{ request()->routeIs('hr.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('hr.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
                 </a>
-                <a href="{{ route('hr.attendance.index') }}" class="list-group-item list-group-item-action bg-transparent text-dark {{ request()->routeIs('hr.attendance*') ? 'active' : '' }}">
-                    <i class="fas fa-user-clock me-2"></i>Mon Pointage
-                </a>
-                <a href="{{ route('hr.departments.index') }}" class="list-group-item list-group-item-action bg-transparent text-dark {{ request()->routeIs('hr.departments*') ? 'active' : '' }}">
+                
+                <a href="{{ route('hr.departments.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.departments*') ? 'active' : '' }}">
                     <i class="fas fa-building me-2"></i>Départements
                 </a>
-                <a href="{{ route('hr.users.index') }}" class="list-group-item list-group-item-action bg-transparent text-dark {{ request()->routeIs('hr.users*') ? 'active' : '' }}">
+                
+                <a href="{{ route('hr.users.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.users*') ? 'active' : '' }}">
                     <i class="fas fa-users me-2"></i>Utilisateurs
+                </a>
+                
+                <a href="{{ route('hr.attendance.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.attendance*') ? 'active' : '' }}">
+                    <i class="fas fa-clock me-2"></i>Mon Pointage
+                </a>
+                
+                <!-- 🆕 Nouveau menu pour les rapports d'évaluation -->
+                <a href="{{ route('hr.evaluation-reports.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.evaluation-reports*') ? 'active' : '' }}">
+                    <i class="fas fa-clipboard-check me-2"></i>Rapports d'Évaluation
+                    @php
+                        $pendingReviews = \App\Models\EvaluationReport::where('status', 'sent')->count();
+                    @endphp
+                    @if($pendingReviews > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $pendingReviews }}</span>
+                    @endif
+                </a>
+                
+                <div class="list-group-item bg-transparent text-white-50 border-0">
+                    <small><i class="fas fa-cog me-2"></i>Administration</small>
+                </div>
+                
+                <a href="#" class="list-group-item list-group-item-action bg-transparent text-white">
+                    <i class="fas fa-chart-bar me-2"></i>Rapports Globaux
+                </a>
+                
+                <a href="#" class="list-group-item list-group-item-action bg-transparent text-white">
+                    <i class="fas fa-cogs me-2"></i>Paramètres
                 </a>
             </div>
         </div>
@@ -36,16 +63,63 @@
         <div id="page-content-wrapper">
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <button class="btn btn-warning" id="menu-toggle">
+                    <button class="btn btn-dark" id="menu-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
+                    
                     <div class="ms-auto">
-                        <div class="dropdown">
-                            <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-shield me-2"></i>{{ Auth::user()->name }}
+                        <!-- Notifications rapides -->
+                        <div class="dropdown d-inline-block me-3">
+                            <button class="btn btn-outline-danger dropdown-toggle position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                @php
+                                    $pendingReviews = \App\Models\EvaluationReport::where('status', 'sent')->count();
+                                    $urgentReviews = \App\Models\EvaluationReport::where('status', 'sent')
+                                        ->where('sent_at', '<=', now()->subDays(7))
+                                        ->count();
+                                @endphp
+                                @if($pendingReviews > 0)
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                        {{ $pendingReviews }}
+                                    </span>
+                                @endif
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                                @if($pendingReviews > 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('hr.evaluation-reports.index') }}">
+                                            <i class="fas fa-clipboard-check me-2 text-warning"></i>
+                                            {{ $pendingReviews }} rapport(s) d'évaluation en attente
+                                        </a>
+                                    </li>
+                                    @if($urgentReviews > 0)
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{{ route('hr.evaluation-reports.index', ['status' => 'sent']) }}">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                {{ $urgentReviews }} rapport(s) urgent(s) (>7 jours)
+                                            </a>
+                                        </li>
+                                    @endif
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('hr.evaluation-reports.dashboard') }}">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            Tableau de bord des rapports
+                                        </a>
+                                    </li>
+                                @else
+                                    <li><span class="dropdown-item text-muted">Aucun rapport en attente</span></li>
+                                @endif
+                            </ul>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-tie me-2"></i>{{ Auth::user()->name }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Profil</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Paramètres</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="d-inline">
@@ -65,14 +139,14 @@
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show">
                         {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
@@ -82,22 +156,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/main.js') }}"></script>
     @yield('scripts')
+    
     <script>
-// Heartbeat pour maintenir la session active
-setInterval(function() {
-    fetch('/heartbeat', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin'
-    }).catch(function() {
-        console.log('Session expirée');
-    });
-}, 300000); // Toutes les 5 minutes
-</script>
+        // Auto-refresh des notifications toutes les 2 minutes
+        setInterval(function() {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newNotifications = doc.querySelector('#notificationDropdown');
+                    if (newNotifications) {
+                        document.querySelector('#notificationDropdown').outerHTML = newNotifications.outerHTML;
+                    }
+                })
+                .catch(() => {});
+        }, 120000); // Toutes les 2 minutes
+    </script>
 </body>
 </html>

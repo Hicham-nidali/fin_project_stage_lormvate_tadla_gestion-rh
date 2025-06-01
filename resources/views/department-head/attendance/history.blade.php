@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Mon Historique de Présence - Chef de Département</h1>
+        <h1>Mon Historique de Présence</h1>
         <a href="{{ route('department-head.attendance.index') }}" class="btn btn-success">
             <i class="fas fa-clock me-2"></i>Pointage du jour
         </a>
@@ -166,26 +166,61 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Actions</h5>
+                    <h5 class="mb-0">Tendance sur la période</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="{{ route('attendance.index') }}" class="btn btn-primary">
-                            <i class="fas fa-users me-2"></i>Gérer présences équipe
-                        </a>
-                        <a href="{{ route('attendance.report') }}" class="btn btn-info">
-                            <i class="fas fa-chart-bar me-2"></i>Rapport équipe
-                        </a>
-                        <a href="{{ route('dashboard') }}" class="btn btn-success">
-                            <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
-                        </a>
-                        <button class="btn btn-outline-primary">
-                            <i class="fas fa-file-export me-2"></i>Exporter mes données
-                        </button>
-                    </div>
+                    <canvas id="attendanceTrendChart" height="250"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Graphique de tendance
+    const trendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+    
+    // Préparer les données pour le graphique
+    @php
+        // Ces données seraient idéalement générées dynamiquement
+        $weeks = ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'];
+        $presentData = [5, 5, 4, 5];
+        $lateData = [0, 0, 1, 0];
+        $absentData = [0, 0, 0, 0];
+    @endphp
+    
+    const trendChart = new Chart(trendCtx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($weeks) !!},
+            datasets: [{
+                label: 'Présent',
+                data: {!! json_encode($presentData) !!},
+                backgroundColor: 'rgba(40, 167, 69, 0.8)'
+            }, {
+                label: 'En retard',
+                data: {!! json_encode($lateData) !!},
+                backgroundColor: 'rgba(255, 193, 7, 0.8)'
+            }, {
+                label: 'Absent',
+                data: {!! json_encode($absentData) !!},
+                backgroundColor: 'rgba(220, 53, 69, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true,
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
 @endsection

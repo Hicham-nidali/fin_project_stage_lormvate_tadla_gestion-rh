@@ -47,4 +47,65 @@ class User extends Authenticatable
     {
         return $this->hasMany(Evaluation::class, 'evaluated_user_id');
     }
+
+    public function overtimeRecords()
+    {
+        return $this->hasMany(OvertimeRecord::class);
+    }
+
+    // 🆕 Relations pour les rapports d'évaluation
+    public function createdEvaluationReports()
+    {
+        return $this->hasMany(EvaluationReport::class, 'created_by');
+    }
+
+    public function reviewedEvaluationReports()
+    {
+        return $this->hasMany(EvaluationReport::class, 'reviewed_by');
+    }
+
+    // 🆕 Méthodes utilitaires pour les rapports d'évaluation
+    public function canCreateEvaluationReports()
+    {
+        return $this->role === 'department_head' && $this->department_id;
+    }
+
+    public function canReviewEvaluationReports()
+    {
+        return $this->role === 'hr_admin';
+    }
+
+    public function getPendingEvaluationReportsToReview()
+    {
+        if (!$this->canReviewEvaluationReports()) {
+            return collect();
+        }
+
+        return EvaluationReport::where('status', 'sent')
+                              ->with(['department', 'creator'])
+                              ->orderBy('sent_at', 'asc')
+                              ->get();
+    }
+
+    public function getDraftEvaluationReportsCount()
+    {
+        if (!$this->canCreateEvaluationReports()) {
+            return 0;
+        }
+
+        return $this->createdEvaluationReports()
+                   ->where('status', 'draft')
+                   ->count();
+    }
+
+    public function getSentEvaluationReportsCount()
+    {
+        if (!$this->canCreateEvaluationReports()) {
+            return 0;
+        }
+
+        return $this->createdEvaluationReports()
+                   ->where('status', 'sent')
+                   ->count();
+    }
 }

@@ -10,34 +10,34 @@ class DepartmentHeadAttendanceController extends Controller
 {
     public function index()
     {
-        $departmentHead = Auth::user();
+        $user = Auth::user();
         
-        if (!$departmentHead || $departmentHead->role !== 'department_head') {
+        if (!$user || $user->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
+        $todayAttendance = Attendance::where('user_id', $user->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
-        return view('department-head.attendance.index', compact('departmentHead', 'todayAttendance'));
+        return view('department-head.attendance.index', compact('user', 'todayAttendance'));
     }
     
     public function checkIn(Request $request)
     {
-        $departmentHead = Auth::user();
+        $user = Auth::user();
         
-        if (!$departmentHead || $departmentHead->role !== 'department_head') {
+        if (!$user || $user->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
+        $todayAttendance = Attendance::where('user_id', $user->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
         if (!$todayAttendance) {
             $todayAttendance = new Attendance();
-            $todayAttendance->user_id = $departmentHead->id;
+            $todayAttendance->user_id = $user->id;
             $todayAttendance->date = now()->toDateString();
             $todayAttendance->status = 'present';
         }
@@ -51,13 +51,13 @@ class DepartmentHeadAttendanceController extends Controller
     
     public function checkOut(Request $request)
     {
-        $departmentHead = Auth::user();
+        $user = Auth::user();
         
-        if (!$departmentHead || $departmentHead->role !== 'department_head') {
+        if (!$user || $user->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
-        $todayAttendance = Attendance::where('user_id', $departmentHead->id)
+        $todayAttendance = Attendance::where('user_id', $user->id)
                                     ->where('date', now()->toDateString())
                                     ->first();
         
@@ -75,20 +75,20 @@ class DepartmentHeadAttendanceController extends Controller
     
     public function history(Request $request)
     {
-        $departmentHead = Auth::user();
+        $user = Auth::user();
         
-        if (!$departmentHead || $departmentHead->role !== 'department_head') {
+        if (!$user || $user->role !== 'department_head') {
             return redirect()->route('login')->with('error', 'Accès refusé.');
         }
         
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
         
-        $attendanceHistory = Attendance::where('user_id', $departmentHead->id)
+        $attendanceHistory = Attendance::where('user_id', $user->id)
                                       ->whereBetween('date', [$startDate, $endDate])
                                       ->orderBy('date', 'desc')
                                       ->get();
         
-        return view('department-head.attendance.history', compact('departmentHead', 'attendanceHistory', 'startDate', 'endDate'));
+        return view('department-head.attendance.history', compact('user', 'attendanceHistory', 'startDate', 'endDate'));
     }
 }
