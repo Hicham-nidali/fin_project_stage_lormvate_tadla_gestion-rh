@@ -61,9 +61,18 @@
         <div id="page-content-wrapper">
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <button class="btn btn-success" id="menu-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-success me-3" id="menu-toggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        
+                        <!-- Logo ORMVAT -->
+                        <div class="navbar-brand d-flex align-items-center">
+                            <img src="{{ asset('images/logo-ormvat.png') }}" alt="ORMVAT" class="navbar-logo me-2">
+                            <span class="navbar-brand-text">ORMVAT</span>
+                        </div>
+                    </div>
+                    
                     <div class="ms-auto">
                         <!-- Notifications rapides pour l'employé -->
                         <div class="dropdown d-inline-block me-3">

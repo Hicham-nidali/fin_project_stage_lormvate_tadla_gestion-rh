@@ -3,10 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Système de Gestion</title>
+    <title>Connexion - Système de Gestion ORMVAT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <style>
+        /* Styles pour le logo sur la page de connexion */
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -20,7 +47,7 @@
                 <div class="image-overlay"></div>
                 <div class="logo-container">
                     <div class="logo">
-                        <i class="fas fa-seedling"></i>
+                        <img src="{{ asset('images/logo-ormvat.png') }}" alt="ORMVAT" class="login-logo" style="width: 60px; height: 60px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
             </div>
@@ -28,7 +55,14 @@
             <!-- Right Side - Form Section -->
             <div class="login-form-section">
                 <div class="form-container">
-                    <h2 class="welcome-title">Welcome !</h2>
+                    <!-- En-tête avec logo -->
+                    <div class="login-header">
+                        <img src="{{ asset('images/logo-ormvat.png') }}" alt="Logo ORMVAT" class="login-logo">
+                        <h2 class="login-title">ORMVAT</h2>
+                        <p class="login-subtitle">Système de Gestion des Ressources Humaines</p>
+                    </div>
+                    
+                    <h2 class="welcome-title">Connexion</h2>
                     
                     @if ($errors->any())
                         <div class="error-message">

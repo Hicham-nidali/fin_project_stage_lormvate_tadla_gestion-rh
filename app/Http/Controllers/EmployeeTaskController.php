@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeTaskController extends Controller
 {
@@ -23,8 +24,7 @@ class EmployeeTaskController extends Controller
             $tasksQuery->where('status', $status);
         }
         
-        $tasks = $tasksQuery->orderBy('due_date')
-                          ->get();
+        $tasks = $tasksQuery->orderBy('due_date')->get();
         
         return view('employee.tasks.index', compact('employee', 'tasks', 'status'));
     }
@@ -66,17 +66,54 @@ class EmployeeTaskController extends Controller
         
         $newStatus = $request->input('status');
         
+        // Validation pour les tâches terminées
+        if ($newStatus == 'completed') {
+            $request->validate([
+                'completion_notes' => 'nullable|string|max:1000',
+                'completion_proof' => 'required|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240' // 10MB max
+            ], [
+                'completion_proof.required' => 'Une preuve de completion est requise pour terminer la tâche.',
+                'completion_proof.mimes' => 'Le fichier doit être une image (jpg, jpeg, png), un PDF ou un document Word.',
+                'completion_proof.max' => 'Le fichier ne peut pas dépasser 10 MB.'
+            ]);
+        } else {
+            $request->validate([
+                'completion_notes' => 'nullable|string|max:1000'
+            ]);
+        }
+        
         if (in_array($newStatus, ['in_progress', 'completed'])) {
+            // Gérer l'upload du fichier de preuve pour les tâches terminées
+            $proofPath = null;
+            if ($newStatus == 'completed' && $request->hasFile('completion_proof')) {
+                $file = $request->file('completion_proof');
+                $filename = time() . '_' . $employee->id . '_' . $file->getClientOriginalName();
+                $proofPath = $file->storeAs('task_proofs', $filename, 'public');
+            }
+            
+            // Supprimer l'ancien fichier de preuve s'il existe
+            if ($task->completion_proof && $proofPath) {
+                $task->deleteCompletionProof();
+            }
+            
             $task->status = $newStatus;
+            $task->completion_notes = $request->input('completion_notes');
             
             if ($newStatus == 'completed') {
                 $task->completed_at = now();
+                if ($proofPath) {
+                    $task->completion_proof = $proofPath;
+                }
             }
             
             $task->save();
             
+            $message = $newStatus == 'completed' 
+                ? 'Tâche marquée comme terminée avec succès. Votre preuve a été envoyée au chef de département.'
+                : 'Statut de la tâche mis à jour avec succès.';
+            
             return redirect()->route('employee.tasks.show', $task->id)
-                             ->with('success', 'Statut de la tâche mis à jour avec succès.');
+                             ->with('success', $message);
         }
         
         return redirect()->route('employee.tasks.show', $task->id)

@@ -1,6 +1,6 @@
 /* ========================================
    🎨 MAIN.CSS - SYSTÈME DE GESTION RH
-   📅 Version 2024 - Design Moderne
+   📅 Version 2024 - Design Moderne + Logo ORMVAT
    🔄 Remplace : style.css, reports.css, custom-overtime.css
    ======================================== */
 
@@ -252,7 +252,7 @@ body {
 }
 
 /* ========================================
-   🧭 NAVBAR STYLING
+   🧭 NAVBAR STYLING + LOGO ORMVAT
    ======================================== */
 .navbar {
   background: var(--surface-color) !important;
@@ -286,6 +286,61 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+/* ========================================
+   🏷️ STYLES LOGO ORMVAT
+   ======================================== */
+.navbar-brand {
+  margin-bottom: 0 !important;
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.navbar-brand:hover {
+  transform: scale(1.02);
+}
+
+.navbar-logo {
+  height: 60px;
+  width: 60px;
+  object-fit: contain;
+  transition: var(--transition-fast);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.navbar-logo:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+.navbar-brand-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #2d5016, #4a7c2a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Responsive du logo */
+@media (max-width: 767.98px) {
+  .navbar-logo {
+    height: 30px;
+    width: 30px;
+  }
+  
+  .navbar-brand-text {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar-brand-text {
+    display: none;
+  }
+}
+
 .navbar .ms-auto {
   display: flex;
   align-items: center;
@@ -310,7 +365,8 @@ body {
 }
 
 .btn-outline-primary,
-.btn-outline-danger {
+.btn-outline-danger,
+.btn-outline-success {
   padding: var(--spacing-sm) !important;
   height: 40px;
   width: 40px;
@@ -355,7 +411,8 @@ body {
   #menu-toggle,
   .navbar .dropdown-toggle,
   .btn-outline-primary,
-  .btn-outline-danger {
+  .btn-outline-danger,
+  .btn-outline-success {
     height: 35px;
     padding: var(--spacing-xs) !important;
     font-size: 0.75rem;
