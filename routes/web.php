@@ -14,6 +14,9 @@ use App\Http\Controllers\DepartmentHeadAttendanceController;
 use App\Http\Controllers\HRAttendanceController;
 use App\Http\Controllers\EvaluationReportController;
 use App\Http\Controllers\HREvaluationReportController;
+use App\Http\Controllers\HRPayrollController;
+use App\Http\Controllers\EmployeePayrollController;
+use App\Http\Controllers\DirectionController;
 
 // Redirection racine
 Route::get('/', function () {
@@ -76,6 +79,31 @@ Route::middleware(['auth', \App\Http\Middleware\HRAdminMiddleware::class])->pref
         Route::get('/{id}/review', [HREvaluationReportController::class, 'review'])->name('review');
         Route::post('/{id}/review', [HREvaluationReportController::class, 'storeReview'])->name('store-review');
     });
+
+    // 🆕 GESTION PAIE - HR ADMIN
+    // Dashboard paie
+    Route::get('/payroll', [HRPayrollController::class, 'dashboard'])->name('payroll.dashboard');
+    
+    // Gestion des salaires
+    Route::prefix('payroll/salaries')->name('payroll.salaries.')->group(function () {
+        Route::get('/', [HRPayrollController::class, 'salariesIndex'])->name('index');
+        Route::get('/create', [HRPayrollController::class, 'salariesCreate'])->name('create');
+        Route::post('/store', [HRPayrollController::class, 'salariesStore'])->name('store');
+        Route::get('/{id}/edit', [HRPayrollController::class, 'salariesEdit'])->name('edit');
+        Route::put('/{id}', [HRPayrollController::class, 'salariesUpdate'])->name('update');
+    });
+    
+    // Bulletins de paie
+    Route::prefix('payroll')->name('payroll.')->group(function () {
+        Route::get('/bulletins', [HRPayrollController::class, 'payrollIndex'])->name('index');
+        Route::post('/calculate', [HRPayrollController::class, 'calculatePayroll'])->name('calculate');
+        Route::get('/{id}', [HRPayrollController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [HRPayrollController::class, 'approve'])->name('approve');
+        Route::post('/{id}/paid', [HRPayrollController::class, 'markAsPaid'])->name('mark-paid');
+        Route::post('/bulk-approve', [HRPayrollController::class, 'bulkApprove'])->name('bulk-approve');
+        Route::get('/export/csv', [HRPayrollController::class, 'export'])->name('export');
+        Route::get('/reports/stats', [HRPayrollController::class, 'reports'])->name('reports');
+    });
 });
 
 // ===================
@@ -134,6 +162,16 @@ Route::middleware(['auth', \App\Http\Middleware\DepartmentHeadMiddleware::class]
         Route::post('/{id}/approve', [\App\Http\Controllers\OvertimeController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [\App\Http\Controllers\OvertimeController::class, 'reject'])->name('reject');
     });
+      // 🆕 GESTION DES OBJECTIFS - CHEF DE DÉPARTEMENT
+    Route::prefix('objectives')->name('objectives.')->group(function () {
+        Route::get('/', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'index'])->name('index');
+        Route::get('/dashboard', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'dashboard'])->name('dashboard');
+        Route::get('/{id}', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'show'])->name('show');
+        Route::post('/{id}/update-progress', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'updateProgress'])->name('update-progress');
+        Route::post('/{id}/complete', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'complete'])->name('complete');
+        Route::post('/{id}/reopen', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'reopen'])->name('reopen');
+        Route::get('/history/all', [App\Http\Controllers\DepartmentHeadObjectiveController::class, 'history'])->name('history');
+    });
 });
 
 // ===================
@@ -175,5 +213,46 @@ Route::middleware(['auth'])->prefix('employee')->name('employee.')->group(functi
         Route::post('/store', [\App\Http\Controllers\EmployeeOvertimeController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\EmployeeOvertimeController::class, 'show'])->name('show');
         Route::get('/history', [\App\Http\Controllers\EmployeeOvertimeController::class, 'history'])->name('history');
+    });
+
+    // 🆕 BULLETINS PAIE - EMPLOYÉS
+    Route::prefix('payroll')->name('payroll.')->group(function () {
+        Route::get('/', [EmployeePayrollController::class, 'index'])->name('index');
+        Route::get('/{id}', [EmployeePayrollController::class, 'show'])->name('show');
+        Route::get('/history/all', [EmployeePayrollController::class, 'history'])->name('history');
+        Route::get('/{id}/download', [EmployeePayrollController::class, 'download'])->name('download');
+        Route::get('/{id}/performance', [EmployeePayrollController::class, 'performanceDetails'])->name('performance');
+        Route::get('/compare/periods', [EmployeePayrollController::class, 'compare'])->name('compare');
+    });
+});
+
+// ===================
+// DIRECTION
+// ===================
+// ===================
+// DIRECTION (Interface simplifiée)
+// ===================
+// ===================
+// DIRECTION (Interface simplifiée)
+// ===================
+// ===================
+// DIRECTION (Interface simplifiée)
+// ===================
+Route::middleware(['auth', \App\Http\Middleware\DirectionMiddleware::class])->prefix('direction')->name('direction.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\DirectionController::class, 'dashboard'])->name('dashboard');
+    Route::get('/attendance', [App\Http\Controllers\DirectionController::class, 'attendance'])->name('attendance');
+    Route::get('/attendance/report', [App\Http\Controllers\DirectionController::class, 'attendanceReport'])->name('attendance.report');
+      // 🆕 GESTION DES OBJECTIFS - DIRECTION
+    Route::prefix('objectives')->name('objectives.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ObjectiveController::class, 'index'])->name('index');
+        Route::get('/dashboard', [App\Http\Controllers\ObjectiveController::class, 'dashboard'])->name('dashboard');
+        Route::get('/create', [App\Http\Controllers\ObjectiveController::class, 'create'])->name('create');
+        Route::post('/store', [App\Http\Controllers\ObjectiveController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\ObjectiveController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [App\Http\Controllers\ObjectiveController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\ObjectiveController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\ObjectiveController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/cancel', [App\Http\Controllers\ObjectiveController::class, 'cancel'])->name('cancel');
+        Route::get('/reports/global', [App\Http\Controllers\ObjectiveController::class, 'report'])->name('report');
     });
 });

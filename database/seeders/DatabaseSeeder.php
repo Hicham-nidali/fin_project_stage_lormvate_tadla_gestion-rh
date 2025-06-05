@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             HRAdminSeeder::class,
+              ObjectiveSeeder::class, // 🆕 Ajouter cette ligne
         ]);
     }
 }

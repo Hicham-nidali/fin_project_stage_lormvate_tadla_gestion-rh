@@ -1,0 +1,114 @@
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Attendance;
+use App\Models\User;
+use Carbon\Carbon;
+
+class DirectionController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(\App\Http\Middleware\DirectionMiddleware::class);
+    }
+
+    public function dashboard()
+    {
+        $today = Carbon::today();
+        
+        // Compter tous les utilisateurs
+        $totalUsers = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])->count();
+        
+        // Présences d'aujourd'hui
+        $todayAttendances = Attendance::whereDate('date', $today)->get();
+        
+        $presentToday = $todayAttendances->whereIn('status', ['present', 'late'])->count();
+        $absentToday = $todayAttendances->where('status', 'absent')->count();
+        $lateToday = $todayAttendances->where('status', 'late')->count();
+        
+        // Utilisateurs sans pointage
+        $usersWithAttendance = $todayAttendances->pluck('user_id')->toArray();
+        $allUsers = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])->pluck('id')->toArray();
+        $notRecorded = count(array_diff($allUsers, $usersWithAttendance));
+
+        return view('direction.dashboard', compact(
+            'totalUsers',
+            'presentToday', 
+            'absentToday',
+            'lateToday',
+            'notRecorded'
+        ));
+    }
+
+    public function attendance(Request $request)
+    {
+        $date = $request->get('date', Carbon::today()->format('Y-m-d'));
+        $selectedDate = Carbon::parse($date);
+        
+        // Présences pour la date sélectionnée
+        $attendances = Attendance::with(['user.department'])
+                                ->whereDate('date', $selectedDate)
+                                ->orderBy('check_in')
+                                ->get();
+        
+        // Utilisateurs sans présence pour cette date
+        $usersWithAttendance = $attendances->pluck('user_id')->toArray();
+        $usersWithoutAttendance = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])
+                                    ->whereNotIn('id', $usersWithAttendance)
+                                    ->with('department')
+                                    ->get();
+        
+        // Statistiques
+        $totalUsers = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])->count();
+        $totalPresent = $attendances->whereIn('status', ['present'])->count();
+        $totalAbsent = $attendances->where('status', 'absent')->count();
+        $totalLate = $attendances->where('status', 'late')->count();
+        $totalNotRecorded = $usersWithoutAttendance->count();
+
+        return view('direction.attendance', compact(
+            'attendances',
+            'usersWithoutAttendance',
+            'totalUsers',
+            'totalPresent',
+            'totalAbsent', 
+            'totalLate',
+            'totalNotRecorded',
+            'date'
+        ));
+    }
+
+    public function attendanceReport(Request $request)
+    {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        
+        // Données de présence pour la période
+        $attendanceData = Attendance::with(['user.department'])
+                                  ->whereBetween('date', [$start, $end])
+                                  ->get();
+        
+        // Statistiques
+        $totalDays = $start->diffInDays($end) + 1;
+        $totalUsers = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])->count();
+        
+        // Calcul du taux global de présence
+        $totalPossibleAttendances = $totalUsers * $totalDays;
+        $actualAttendances = $attendanceData->whereIn('status', ['present', 'late'])->count();
+        $globalAttendanceRate = $totalPossibleAttendances > 0 ? 
+            round(($actualAttendances / $totalPossibleAttendances) * 100, 1) : 0;
+
+        return view('direction.attendance-report', compact(
+            'attendanceData',
+            'startDate',
+            'endDate', 
+            'totalDays',
+            'totalUsers',
+            'globalAttendanceRate'
+        ));
+    }
+}

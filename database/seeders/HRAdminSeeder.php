@@ -64,7 +64,19 @@ class HRAdminSeeder extends Seeder
         );
         echo "✅ Admin RH créé: {$hrAdmin->email}\n";
 
-        // 3. Créer les chefs de département
+        // 3. Créer la Direction
+        $direction = User::updateOrCreate(
+            ['email' => 'direction@entreprise.com'],
+            [
+                'name' => 'Direction Générale',
+                'password' => Hash::make('password123'),
+                'role' => 'direction',
+                'department_id' => null // Direction n'appartient à aucun département
+            ]
+        );
+        echo "✅ Direction créée: {$direction->email}\n";
+
+        // 4. Créer les chefs de département
         $departmentHeads = [
             [
                 'name' => 'Chef Informatique',
@@ -106,7 +118,7 @@ class HRAdminSeeder extends Seeder
             echo "✅ Chef créé: {$head->name} pour {$department->name}\n";
         }
 
-        // 4. Créer les employés
+        // 5. Créer les employés
         $employees = [
             // IT
             ['name' => 'Jean Dupont', 'email' => 'jean.dupont@entreprise.com', 'dept' => 'Informatique'],
@@ -141,13 +153,14 @@ class HRAdminSeeder extends Seeder
             echo "✅ Employé créé: {$employee->name} dans {$department->name}\n";
         }
 
-        // 5. Créer des données d'exemple
+        // 6. Créer des données d'exemple
         $this->createSampleData();
 
         echo "\n🎉 SYSTÈME INITIALISÉ AVEC SUCCÈS!\n";
         echo "==========================================\n";
         echo "COMPTES DE CONNEXION:\n";
         echo "==========================================\n";
+        echo "👑 Direction: direction@entreprise.com / password123\n";
         echo "👑 Admin RH: admin.rh@entreprise.com / password123\n";
         echo "👨‍💼 Chef IT: chef.it@entreprise.com / password123\n";
         echo "👨‍💼 Chef Finance: chef.finance@entreprise.com / password123\n";
@@ -162,25 +175,37 @@ class HRAdminSeeder extends Seeder
     {
         echo "\n📊 Création des données d'exemple...\n";
 
-        // Présences d'exemple
-        $employees = User::where('role', 'employee')->take(3)->get();
-        foreach ($employees as $employee) {
-            for ($i = 0; $i < 5; $i++) {
+        // 🆕 Présences pour TOUS les utilisateurs (employés, chefs, admin RH)
+        $allUsers = User::whereIn('role', ['employee', 'department_head', 'hr_admin'])->get();
+        
+        foreach ($allUsers as $user) {
+            for ($i = 0; $i < 7; $i++) { // 7 derniers jours
                 $date = Carbon::now()->subDays($i);
-                $status = $i == 2 ? 'absent' : ($i == 4 ? 'late' : 'present');
+                
+                // Définir des statuts variés pour rendre les données réalistes
+                if ($i == 0) { // Aujourd'hui
+                    $status = 'present'; // La plupart sont présents aujourd'hui
+                } elseif ($i == 2) { // Il y a 2 jours
+                    $status = rand(1, 10) <= 2 ? 'absent' : 'present'; // 20% absents
+                } elseif ($i == 4) { // Il y a 4 jours
+                    $status = rand(1, 10) <= 3 ? 'late' : 'present'; // 30% en retard
+                } else {
+                    $status = rand(1, 10) <= 1 ? 'absent' : 'present'; // 10% absents normalement
+                }
                 
                 Attendance::updateOrCreate(
                     [
-                        'user_id' => $employee->id,
+                        'user_id' => $user->id,
                         'date' => $date->toDateString()
                     ],
                     [
-                        'check_in' => $status != 'absent' ? $date->setTime(8, 30) : null,
-                        'check_out' => $status != 'absent' ? $date->setTime(17, 30) : null,
+                        'check_in' => $status != 'absent' ? $date->setTime(rand(8, 9), rand(0, 59)) : null,
+                        'check_out' => $status != 'absent' ? $date->setTime(rand(17, 18), rand(0, 59)) : null,
                         'status' => $status
                     ]
                 );
             }
+            echo "✅ Présences créées pour: {$user->name} ({$user->role})\n";
         }
 
         // Tâches d'exemple

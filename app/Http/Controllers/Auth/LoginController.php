@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -23,7 +24,7 @@ class LoginController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
- 
+        
         // Tenter la connexion avec "remember me"
         $remember = $request->filled('remember');
         
@@ -37,7 +38,7 @@ class LoginController extends Controller
             
             return $this->redirectToUserDashboard();
         }
- 
+        
         return back()->withErrors([
             'email' => 'Identifiants incorrects.',
         ])->onlyInput('email');
@@ -65,10 +66,12 @@ class LoginController extends Controller
         $user = Auth::user();
         
         switch ($user->role) {
+            case 'direction':
+                return redirect()->route('direction.dashboard');
             case 'hr_admin':
                 return redirect()->route('hr.dashboard');
             case 'department_head':
-                return redirect()->route('dashboard');  
+                return redirect()->route('dashboard');
             case 'employee':
                 return redirect()->route('employee.dashboard');
             default:

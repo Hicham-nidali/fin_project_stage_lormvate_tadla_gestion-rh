@@ -46,11 +46,23 @@
                     <i class="fas fa-chart-line me-2"></i>Rapports
                 </a>
                 
-                <!-- 🆕 Nouveau menu pour les rapports d'évaluation -->
                 <a href="{{ route('evaluation-reports.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('evaluation-reports*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-check me-2"></i>Rapports d'Évaluation
                     @if(Auth::user()->getDraftEvaluationReportsCount() > 0)
                         <span class="badge bg-warning rounded-pill float-end">{{ Auth::user()->getDraftEvaluationReportsCount() }}</span>
+                    @endif
+                </a>
+                
+                <a href="{{ route('objectives.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('objectives*') ? 'active' : '' }}">
+                    <i class="fas fa-bullseye me-2"></i>Mes Objectifs
+                    @php
+                        $userDepartmentId = Auth::user()->department_id;
+                        $newObjectives = $userDepartmentId ? \App\Models\Objective::forDepartment($userDepartmentId)->where('status', 'assigned')->where('created_at', '>=', now()->subDays(7))->count() : 0;
+                        $overdueUserObjectives = $userDepartmentId ? \App\Models\Objective::forDepartment($userDepartmentId)->overdue()->count() : 0;
+                        $totalObjectiveAlerts = $newObjectives + $overdueUserObjectives;
+                    @endphp
+                    @if($totalObjectiveAlerts > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $totalObjectiveAlerts }}</span>
                     @endif
                 </a>
                 

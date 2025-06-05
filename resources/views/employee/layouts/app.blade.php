@@ -39,6 +39,22 @@
                 <a href="{{ route('employee.profile.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.profile*') ? 'active' : '' }}">
                     <i class="fas fa-user me-2"></i>Mon Profil
                 </a>
+                <!-- 🆕 Menu pour les bulletins de paie -->
+                <a href="{{ route('employee.payroll.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.payroll*') ? 'active' : '' }}">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Mes Bulletins de Paie
+                    @php
+                        $currentPeriod = \App\Models\PayrollRecord::generatePeriod();
+                        $currentPayroll = \App\Models\PayrollRecord::where('user_id', Auth::id())
+                                                                  ->where('period', $currentPeriod)
+                                                                  ->where('status', '!=', 'draft')
+                                                                  ->exists();
+                    @endphp
+                    @if($currentPayroll)
+                        <span class="badge bg-info rounded-pill float-end notification-badge">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    @endif
+                </a>
             </div>
         </div>
         <!-- Page Content -->
@@ -49,12 +65,75 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="ms-auto">
+                        <!-- Notifications rapides pour l'employé -->
+                        <div class="dropdown d-inline-block me-3">
+                            <button class="btn btn-outline-success dropdown-toggle position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                @php
+                                    $pendingTasks = Auth::user()->tasks()->whereIn('status', ['pending', 'in_progress'])->count();
+                                    $pendingRequests = \App\Models\Request::where('user_id', Auth::id())->where('status', 'pending')->count();
+                                    $newPayroll = \App\Models\PayrollRecord::where('user_id', Auth::id())
+                                                                          ->where('period', $currentPeriod)
+                                                                          ->where('status', '!=', 'draft')
+                                                                          ->where('created_at', '>=', now()->subDays(7))
+                                                                          ->exists();
+                                    $totalNotifications = $pendingTasks + $pendingRequests + ($newPayroll ? 1 : 0);
+                                @endphp
+                                @if($totalNotifications > 0)
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                        {{ $totalNotifications }}
+                                    </span>
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                                @if($pendingTasks > 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('employee.tasks.index') }}">
+                                            <i class="fas fa-tasks me-2 text-primary"></i>
+                                            {{ $pendingTasks }} tâche(s) en cours
+                                        </a>
+                                    </li>
+                                @endif
+
+                                @if($pendingRequests > 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('employee.requests.index') }}">
+                                            <i class="fas fa-paper-plane me-2 text-warning"></i>
+                                            {{ $pendingRequests }} demande(s) en attente
+                                        </a>
+                                    </li>
+                                @endif
+
+                                @if($newPayroll)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('employee.payroll.index') }}">
+                                            <i class="fas fa-file-invoice-dollar me-2 text-success"></i>
+                                            Nouveau bulletin de paie disponible
+                                        </a>
+                                    </li>
+                                @endif
+
+                                @if($totalNotifications > 0)
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('employee.dashboard') }}">
+                                            <i class="fas fa-tachometer-alt me-2"></i>
+                                            Voir le tableau de bord
+                                        </a>
+                                    </li>
+                                @else
+                                    <li><span class="dropdown-item text-muted">Aucune notification</span></li>
+                                @endif
+                            </ul>
+                        </div>
+
                         <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user me-2"></i>{{ $employee->name ?? 'Employé' }}
+                                <i class="fas fa-user me-2"></i>{{ Auth::user()->name ?? 'Employé' }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{{ route('employee.profile.index') }}"><i class="fas fa-user-cog me-2"></i>Profil</a></li>
+                                <li><a class="dropdown-item" href="{{ route('employee.payroll.index') }}"><i class="fas fa-file-invoice-dollar me-2"></i>Mes Bulletins de Paie</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="d-inline">

@@ -34,7 +34,7 @@
                     <i class="fas fa-clock me-2"></i>Mon Pointage
                 </a>
                 
-                <!-- 🆕 Nouveau menu pour les rapports d'évaluation -->
+                <!-- 🆕 Menu pour les rapports d'évaluation -->
                 <a href="{{ route('hr.evaluation-reports.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.evaluation-reports*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-check me-2"></i>Rapports d'Évaluation
                     @php
@@ -42,6 +42,22 @@
                     @endphp
                     @if($pendingReviews > 0)
                         <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $pendingReviews }}</span>
+                    @endif
+                </a>
+
+                <!-- 🆕 Menu pour la gestion de paie -->
+                <a href="{{ route('hr.payroll.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.payroll*') ? 'active' : '' }}">
+                    <i class="fas fa-money-bill-wave me-2"></i>Gestion Paie
+                    @php
+                        $pendingPayrolls = \App\Models\PayrollRecord::where('status', 'calculated')->count();
+                        $employeesWithoutSalary = \App\Models\User::where('role', 'employee')
+                                                                 ->whereDoesntHave('salaries', function($q) {
+                                                                     $q->current();
+                                                                 })->count();
+                        $totalPendingPayroll = $pendingPayrolls + $employeesWithoutSalary;
+                    @endphp
+                    @if($totalPendingPayroll > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $totalPendingPayroll }}</span>
                     @endif
                 </a>
                 
@@ -77,10 +93,16 @@
                                     $urgentReviews = \App\Models\EvaluationReport::where('status', 'sent')
                                         ->where('sent_at', '<=', now()->subDays(7))
                                         ->count();
+                                    $pendingPayrolls = \App\Models\PayrollRecord::where('status', 'calculated')->count();
+                                    $employeesWithoutSalary = \App\Models\User::where('role', 'employee')
+                                                                             ->whereDoesntHave('salaries', function($q) {
+                                                                                 $q->current();
+                                                                             })->count();
+                                    $totalNotifications = $pendingReviews + $pendingPayrolls + ($employeesWithoutSalary > 0 ? 1 : 0);
                                 @endphp
-                                @if($pendingReviews > 0)
+                                @if($totalNotifications > 0)
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
-                                        {{ $pendingReviews }}
+                                        {{ $totalNotifications }}
                                     </span>
                                 @endif
                             </button>
@@ -100,6 +122,27 @@
                                             </a>
                                         </li>
                                     @endif
+                                @endif
+
+                                @if($pendingPayrolls > 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('hr.payroll.index', ['status' => 'calculated']) }}">
+                                            <i class="fas fa-money-bill-wave me-2 text-primary"></i>
+                                            {{ $pendingPayrolls }} bulletin(s) de paie à approuver
+                                        </a>
+                                    </li>
+                                @endif
+
+                                @if($employeesWithoutSalary > 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('hr.payroll.salaries.index') }}">
+                                            <i class="fas fa-exclamation-circle me-2 text-info"></i>
+                                            {{ $employeesWithoutSalary }} employé(s) sans salaire défini
+                                        </a>
+                                    </li>
+                                @endif
+
+                                @if($totalNotifications > 0)
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('hr.evaluation-reports.dashboard') }}">
@@ -107,8 +150,14 @@
                                             Tableau de bord des rapports
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('hr.payroll.dashboard') }}">
+                                            <i class="fas fa-chart-bar me-2"></i>
+                                            Tableau de bord de la paie
+                                        </a>
+                                    </li>
                                 @else
-                                    <li><span class="dropdown-item text-muted">Aucun rapport en attente</span></li>
+                                    <li><span class="dropdown-item text-muted">Aucune notification</span></li>
                                 @endif
                             </ul>
                         </div>
