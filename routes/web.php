@@ -262,4 +262,16 @@ Route::middleware(['auth', \App\Http\Middleware\DirectionMiddleware::class])->pr
         Route::post('/{id}/cancel', [App\Http\Controllers\ObjectiveController::class, 'cancel'])->name('cancel');
         Route::get('/reports/global', [App\Http\Controllers\ObjectiveController::class, 'report'])->name('report');
     });
+    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/', [App\Http\Controllers\DirectionReportController::class, 'index'])->name('index');
+    Route::get('/dashboard', [App\Http\Controllers\DirectionReportController::class, 'dashboard'])->name('dashboard');
+    Route::get('/department/{id}', [App\Http\Controllers\DirectionReportController::class, 'showDepartmentReport'])->name('show.department');
+    Route::get('/evaluation/{id}', [App\Http\Controllers\DirectionReportController::class, 'showEvaluationReport'])->name('show.evaluation');
+    Route::get('/export', [App\Http\Controllers\DirectionReportController::class, 'export'])->name('export');
+    
+    // APIs pour les graphiques
+    Route::get('/api/by-status', [App\Http\Controllers\DirectionReportController::class, 'reportsByStatus'])->name('api.by-status');
+    Route::get('/api/by-department', [App\Http\Controllers\DirectionReportController::class, 'reportsByDepartment'])->name('api.by-department');
+    Route::get('/api/monthly-trends', [App\Http\Controllers\DirectionReportController::class, 'monthlyTrends'])->name('api.monthly-trends');
+});
 });

@@ -47,6 +47,56 @@
                         <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $totalAlerts }}</span>
                     @endif
                 </a>
+                
+                <!-- NOUVEAU MENU RAPPORTS -->
+                <div class="dropdown">
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent text-white dropdown-toggle {{ request()->routeIs('direction.reports*') ? 'active' : '' }}" 
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-chart-line me-2"></i>Rapports Globaux
+                        @php
+                            $pendingReports = \App\Models\EvaluationReport::where('status', 'sent')->count();
+                            $reportsThisMonth = \App\Models\Report::whereMonth('created_at', now()->month)->count() + 
+                                              \App\Models\EvaluationReport::whereMonth('created_at', now()->month)->count();
+                        @endphp
+                        @if($pendingReports > 0)
+                            <span class="badge bg-info rounded-pill float-end notification-badge">{{ $pendingReports }}</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu bg-dark border-0 mt-1 ms-3">
+                        <li>
+                            <a class="dropdown-item text-white bg-transparent {{ request()->routeIs('direction.reports.dashboard') ? 'active' : '' }}" 
+                               href="{{ route('direction.reports.dashboard') }}">
+                                <i class="fas fa-chart-bar me-2"></i>Tableau de Bord
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-transparent {{ request()->routeIs('direction.reports.index') ? 'active' : '' }}" 
+                               href="{{ route('direction.reports.index') }}">
+                                <i class="fas fa-list me-2"></i>Tous les Rapports
+                                <span class="badge bg-primary rounded-pill float-end">{{ $reportsThisMonth }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-transparent" 
+                               href="{{ route('direction.reports.index', ['type' => 'evaluation']) }}">
+                                <i class="fas fa-clipboard-check me-2"></i>Rapports d'Évaluation
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-transparent" 
+                               href="{{ route('direction.reports.index', ['type' => 'monthly']) }}">
+                                <i class="fas fa-calendar-alt me-2"></i>Rapports Mensuels
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider bg-secondary"></li>
+                        <li>
+                            <a class="dropdown-item text-white bg-transparent" 
+                               href="{{ route('direction.reports.export', ['type' => 'all']) }}">
+                                <i class="fas fa-download me-2"></i>Exporter Tout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
         
@@ -66,6 +116,24 @@
                     </div>
                     
                     <div class="ms-auto">
+                        <!-- Notifications rapports -->
+                        @if($pendingReports > 0)
+                        <div class="dropdown d-inline-block me-2">
+                            <button class="btn btn-outline-warning position-relative" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
+                                    {{ $pendingReports }}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Rapports en Attente</h6></li>
+                                <li><a class="dropdown-item" href="{{ route('direction.reports.index', ['status' => 'sent']) }}">
+                                    {{ $pendingReports }} rapport(s) d'évaluation à examiner
+                                </a></li>
+                            </ul>
+                        </div>
+                        @endif
+                        
                         <div class="dropdown">
                             <button class="btn btn-dark dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-crown me-2"></i>{{ Auth::user()->name }}
