@@ -32,6 +32,21 @@
                     @endif
                 </a>
                 
+                <!-- NOUVEAU MENU ANNONCES -->
+                <a href="{{ route('direction.announcements.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('direction.announcements*') ? 'active' : '' }}">
+                    <i class="fas fa-bullhorn me-2"></i>Annonces & Réunions
+                    @php
+                        $draftAnnouncements = \App\Models\Announcement::where('status', 'draft')->count();
+                        $todayMeetings = \App\Models\Announcement::published()
+                                                                ->whereDate('meeting_date', today())
+                                                                ->count();
+                        $totalAlerts = $draftAnnouncements + $todayMeetings;
+                    @endphp
+                    @if($totalAlerts > 0)
+                        <span class="badge bg-info rounded-pill float-end notification-badge">{{ $totalAlerts }}</span>
+                    @endif
+                </a>
+                
                 <a href="{{ route('direction.attendance') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('direction.attendance*') ? 'active' : '' }}">
                     <i class="fas fa-users-clock me-2"></i>Présences Globales
                 </a>
@@ -41,14 +56,14 @@
                     @php
                         $overdueObjectives = \App\Models\Objective::overdue()->count();
                         $criticalObjectives = \App\Models\Objective::critical()->active()->count();
-                        $totalAlerts = $overdueObjectives + $criticalObjectives;
+                        $totalObjectiveAlerts = $overdueObjectives + $criticalObjectives;
                     @endphp
-                    @if($totalAlerts > 0)
-                        <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $totalAlerts }}</span>
+                    @if($totalObjectiveAlerts > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge">{{ $totalObjectiveAlerts }}</span>
                     @endif
                 </a>
                 
-                <!-- NOUVEAU MENU RAPPORTS -->
+                <!-- MENU RAPPORTS -->
                 <div class="dropdown">
                     <a href="#" class="list-group-item list-group-item-action bg-transparent text-white dropdown-toggle {{ request()->routeIs('direction.reports*') ? 'active' : '' }}" 
                        data-bs-toggle="dropdown" aria-expanded="false">
@@ -116,6 +131,68 @@
                     </div>
                     
                     <div class="ms-auto">
+                        <!-- Notifications annonces -->
+                        @php
+                            $draftCount = \App\Models\Announcement::where('status', 'draft')->count();
+                            $todayMeetingsCount = \App\Models\Announcement::published()
+                                                                        ->whereDate('meeting_date', today())
+                                                                        ->count();
+                            $urgentUnread = \App\Models\Announcement::published()
+                                                                   ->where('priority', 'urgent')
+                                                                   ->where('created_at', '>=', now()->subDays(1))
+                                                                   ->count();
+                            $totalAnnouncementNotifications = $draftCount + $todayMeetingsCount + $urgentUnread;
+                        @endphp
+                        
+                        @if($totalAnnouncementNotifications > 0)
+                        <div class="dropdown d-inline-block me-2">
+                            <button class="btn btn-outline-primary position-relative" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bullhorn"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary announcement-notification-badge">
+                                    {{ $totalAnnouncementNotifications }}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Annonces & Réunions</h6></li>
+                                
+                                @if($draftCount > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('direction.announcements.index', ['status' => 'draft']) }}">
+                                        <i class="fas fa-edit me-2 text-warning"></i>
+                                        {{ $draftCount }} brouillon(s) d'annonce
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($todayMeetingsCount > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('direction.announcements.index') }}">
+                                        <i class="fas fa-calendar-day me-2 text-danger"></i>
+                                        {{ $todayMeetingsCount }} réunion(s) aujourd'hui
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($urgentUnread > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('direction.announcements.index', ['priority' => 'urgent']) }}">
+                                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                        {{ $urgentUnread }} annonce(s) urgente(s) récente(s)
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('direction.announcements.dashboard') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Tableau de bord des annonces
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        @endif
+                        
                         <!-- Notifications rapports -->
                         @if($pendingReports > 0)
                         <div class="dropdown d-inline-block me-2">

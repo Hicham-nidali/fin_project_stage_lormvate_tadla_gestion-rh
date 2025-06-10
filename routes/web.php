@@ -17,6 +17,11 @@ use App\Http\Controllers\HREvaluationReportController;
 use App\Http\Controllers\HRPayrollController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\DirectionController;
+// 🆕 Nouveaux contrôleurs d'annonces
+use App\Http\Controllers\DirectionAnnouncementController;
+use App\Http\Controllers\EmployeeAnnouncementController;
+use App\Http\Controllers\DepartmentHeadAnnouncementController;
+use App\Http\Controllers\HRAnnouncementController;
 
 // Redirection racine
 Route::get('/', function () {
@@ -71,6 +76,17 @@ Route::middleware(['auth', \App\Http\Middleware\HRAdminMiddleware::class])->pref
     Route::post('/attendance/check-out', [HRAttendanceController::class, 'checkOut'])->name('attendance.check-out');
     Route::get('/attendance/history', [HRAttendanceController::class, 'history'])->name('attendance.history');
     
+    // 🆕 ANNONCES - HR ADMIN
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [HRAnnouncementController::class, 'index'])->name('index');
+        Route::get('/{id}', [HRAnnouncementController::class, 'show'])->name('show');
+        Route::post('/{id}/mark-read', [HRAnnouncementController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/mark-all-read', [HRAnnouncementController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::get('/api/unread-count', [HRAnnouncementController::class, 'getUnreadCount'])->name('unread-count');
+        Route::get('/stats/global', [HRAnnouncementController::class, 'globalStats'])->name('global-stats');
+        Route::get('/export/stats', [HRAnnouncementController::class, 'exportStats'])->name('export-stats');
+    });
+    
     // RAPPORTS D'ÉVALUATION - ADMINISTRATION RH
     Route::prefix('evaluation-reports')->name('evaluation-reports.')->group(function () {
         Route::get('/', [HREvaluationReportController::class, 'index'])->name('index');
@@ -124,6 +140,16 @@ Route::middleware(['auth', \App\Http\Middleware\DepartmentHeadMiddleware::class]
         Route::post('/attendance/check-in', [DepartmentHeadAttendanceController::class, 'checkIn'])->name('attendance.check-in');
         Route::post('/attendance/check-out', [DepartmentHeadAttendanceController::class, 'checkOut'])->name('attendance.check-out');
         Route::get('/attendance/history', [DepartmentHeadAttendanceController::class, 'history'])->name('attendance.history');
+    });
+    
+    // 🆕 ANNONCES - CHEF DE DÉPARTEMENT
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [DepartmentHeadAnnouncementController::class, 'index'])->name('index');
+        Route::get('/{id}', [DepartmentHeadAnnouncementController::class, 'show'])->name('show');
+        Route::post('/{id}/mark-read', [DepartmentHeadAnnouncementController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/mark-all-read', [DepartmentHeadAnnouncementController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::get('/api/unread-count', [DepartmentHeadAnnouncementController::class, 'getUnreadCount'])->name('unread-count');
+        Route::get('/team/reading-stats', [DepartmentHeadAnnouncementController::class, 'teamReadingStats'])->name('team-reading-stats');
     });
     
     // Tâches
@@ -183,6 +209,15 @@ Route::middleware(['auth', \App\Http\Middleware\DepartmentHeadMiddleware::class]
 Route::middleware(['auth'])->prefix('employee')->name('employee.')->group(function () {
     Route::get('/', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard');
     
+    // 🆕 ANNONCES - EMPLOYÉS
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [EmployeeAnnouncementController::class, 'index'])->name('index');
+        Route::get('/{id}', [EmployeeAnnouncementController::class, 'show'])->name('show');
+        Route::post('/{id}/mark-read', [EmployeeAnnouncementController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/mark-all-read', [EmployeeAnnouncementController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::get('/unread-count', [EmployeeAnnouncementController::class, 'getUnreadCount'])->name('unread-count');
+    });
+    
     // Pointage
     Route::get('/attendance', [\App\Http\Controllers\EmployeeAttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/check-in', [\App\Http\Controllers\EmployeeAttendanceController::class, 'checkIn'])->name('attendance.check-in');
@@ -237,6 +272,21 @@ Route::middleware(['auth', \App\Http\Middleware\DirectionMiddleware::class])->pr
     Route::get('/attendance', [DirectionController::class, 'attendance'])->name('attendance');
     Route::get('/attendance/report', [DirectionController::class, 'attendanceReport'])->name('attendance.report');
     
+    // 🆕 GESTION DES ANNONCES - DIRECTION
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [DirectionAnnouncementController::class, 'index'])->name('index');
+        Route::get('/dashboard', [DirectionAnnouncementController::class, 'dashboard'])->name('dashboard');
+        Route::get('/create', [DirectionAnnouncementController::class, 'create'])->name('create');
+        Route::post('/store', [DirectionAnnouncementController::class, 'store'])->name('store');
+        Route::get('/{id}', [DirectionAnnouncementController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [DirectionAnnouncementController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [DirectionAnnouncementController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DirectionAnnouncementController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/publish', [DirectionAnnouncementController::class, 'publish'])->name('publish');
+        Route::post('/{id}/archive', [DirectionAnnouncementController::class, 'archive'])->name('archive');
+        Route::get('/{id}/read-stats', [DirectionAnnouncementController::class, 'readStats'])->name('read-stats');
+    });
+    
     // GESTION DES UTILISATEURS - DIRECTION
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [DirectionController::class, 'usersIndex'])->name('index');
@@ -262,16 +312,18 @@ Route::middleware(['auth', \App\Http\Middleware\DirectionMiddleware::class])->pr
         Route::post('/{id}/cancel', [App\Http\Controllers\ObjectiveController::class, 'cancel'])->name('cancel');
         Route::get('/reports/global', [App\Http\Controllers\ObjectiveController::class, 'report'])->name('report');
     });
-    Route::prefix('reports')->name('reports.')->group(function () {
-    Route::get('/', [App\Http\Controllers\DirectionReportController::class, 'index'])->name('index');
-    Route::get('/dashboard', [App\Http\Controllers\DirectionReportController::class, 'dashboard'])->name('dashboard');
-    Route::get('/department/{id}', [App\Http\Controllers\DirectionReportController::class, 'showDepartmentReport'])->name('show.department');
-    Route::get('/evaluation/{id}', [App\Http\Controllers\DirectionReportController::class, 'showEvaluationReport'])->name('show.evaluation');
-    Route::get('/export', [App\Http\Controllers\DirectionReportController::class, 'export'])->name('export');
     
-    // APIs pour les graphiques
-    Route::get('/api/by-status', [App\Http\Controllers\DirectionReportController::class, 'reportsByStatus'])->name('api.by-status');
-    Route::get('/api/by-department', [App\Http\Controllers\DirectionReportController::class, 'reportsByDepartment'])->name('api.by-department');
-    Route::get('/api/monthly-trends', [App\Http\Controllers\DirectionReportController::class, 'monthlyTrends'])->name('api.monthly-trends');
-});
+    // RAPPORTS GLOBAUX - DIRECTION
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [App\Http\Controllers\DirectionReportController::class, 'index'])->name('index');
+        Route::get('/dashboard', [App\Http\Controllers\DirectionReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/department/{id}', [App\Http\Controllers\DirectionReportController::class, 'showDepartmentReport'])->name('show.department');
+        Route::get('/evaluation/{id}', [App\Http\Controllers\DirectionReportController::class, 'showEvaluationReport'])->name('show.evaluation');
+        Route::get('/export', [App\Http\Controllers\DirectionReportController::class, 'export'])->name('export');
+        
+        // APIs pour les graphiques
+        Route::get('/api/by-status', [App\Http\Controllers\DirectionReportController::class, 'reportsByStatus'])->name('api.by-status');
+        Route::get('/api/by-department', [App\Http\Controllers\DirectionReportController::class, 'reportsByDepartment'])->name('api.by-department');
+        Route::get('/api/monthly-trends', [App\Http\Controllers\DirectionReportController::class, 'monthlyTrends'])->name('api.monthly-trends');
+    });
 });

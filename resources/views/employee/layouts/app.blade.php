@@ -21,6 +21,21 @@
                 <a href="{{ route('employee.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
                 </a>
+                
+                <!-- NOUVEAU MENU ANNONCES -->
+                <a href="{{ route('employee.announcements.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.announcements*') ? 'active' : '' }}">
+                    <i class="fas fa-bullhorn me-2"></i>Annonces Direction
+                    @php
+                        $unreadAnnouncements = \App\Models\Announcement::getUnreadCountForUser(Auth::user());
+                        $urgentUnread = \App\Models\Announcement::getUrgentUnreadCountForUser(Auth::user());
+                        $todayMeetings = \App\Models\Announcement::getTodayMeetings()->count();
+                        $totalAnnouncementAlerts = $unreadAnnouncements + $todayMeetings;
+                    @endphp
+                    @if($totalAnnouncementAlerts > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge announcement-notification-badge">{{ $totalAnnouncementAlerts }}</span>
+                    @endif
+                </a>
+                
                 <a href="{{ route('employee.attendance.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.attendance*') ? 'active' : '' }}">
                     <i class="fas fa-clock me-2"></i>Pointage
                 </a>
@@ -39,7 +54,7 @@
                 <a href="{{ route('employee.profile.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.profile*') ? 'active' : '' }}">
                     <i class="fas fa-user me-2"></i>Mon Profil
                 </a>
-                <!-- 🆕 Menu pour les bulletins de paie -->
+                <!-- Menu pour les bulletins de paie -->
                 <a href="{{ route('employee.payroll.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('employee.payroll*') ? 'active' : '' }}">
                     <i class="fas fa-file-invoice-dollar me-2"></i>Mes Bulletins de Paie
                     @php
@@ -74,6 +89,62 @@
                     </div>
                     
                     <div class="ms-auto">
+                        <!-- Notifications annonces Direction -->
+                        @php
+                            $unreadAnnouncements = \App\Models\Announcement::getUnreadCountForUser(Auth::user());
+                            $urgentUnread = \App\Models\Announcement::getUrgentUnreadCountForUser(Auth::user());
+                            $todayMeetings = \App\Models\Announcement::getTodayMeetings();
+                        @endphp
+                        
+                        @if($unreadAnnouncements > 0 || $todayMeetings->count() > 0 || $urgentUnread > 0)
+                        <div class="dropdown d-inline-block me-2">
+                            <button class="btn btn-outline-primary position-relative" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bullhorn"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary announcement-notification-badge">
+                                    {{ $unreadAnnouncements + $todayMeetings->count() }}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Annonces Direction</h6></li>
+                                
+                                @if($urgentUnread > 0)
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ route('employee.announcements.index', ['priority' => 'urgent', 'read_status' => 'unread']) }}">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        {{ $urgentUnread }} annonce(s) urgente(s) non lue(s)
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($unreadAnnouncements > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('employee.announcements.index', ['read_status' => 'unread']) }}">
+                                        <i class="fas fa-envelope me-2 text-warning"></i>
+                                        {{ $unreadAnnouncements }} annonce(s) non lue(s)
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($todayMeetings->count() > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('employee.announcements.index') }}">
+                                        <i class="fas fa-calendar-day me-2 text-danger"></i>
+                                        {{ $todayMeetings->count() }} réunion(s) aujourd'hui
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('employee.announcements.index') }}">
+                                        <i class="fas fa-list me-2"></i>
+                                        Voir toutes les annonces
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        @endif
+
                         <!-- Notifications rapides pour l'employé -->
                         <div class="dropdown d-inline-block me-3">
                             <button class="btn btn-outline-success dropdown-toggle position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -142,6 +213,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{{ route('employee.profile.index') }}"><i class="fas fa-user-cog me-2"></i>Profil</a></li>
+                                <li><a class="dropdown-item" href="{{ route('employee.announcements.index') }}"><i class="fas fa-bullhorn me-2"></i>Annonces Direction</a></li>
                                 <li><a class="dropdown-item" href="{{ route('employee.payroll.index') }}"><i class="fas fa-file-invoice-dollar me-2"></i>Mes Bulletins de Paie</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
@@ -182,5 +254,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/main.js') }}"></script>
     @yield('scripts')
+    
+    <script>
+        // Auto-refresh des notifications d'annonces toutes les 2 minutes
+        setInterval(function() {
+            fetch('/employee/announcements/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    // Mettre à jour les badges de notification
+                    const badges = document.querySelectorAll('.announcement-notification-badge');
+                    badges.forEach(badge => {
+                        if (data.unread_count > 0) {
+                            badge.textContent = data.unread_count;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+        }, 120000); // 2 minutes
+    </script>
 </body>
 </html>

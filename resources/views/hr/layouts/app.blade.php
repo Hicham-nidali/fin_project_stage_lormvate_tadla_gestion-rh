@@ -22,6 +22,20 @@
                     <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
                 </a>
                 
+                <!-- NOUVEAU MENU ANNONCES -->
+                <a href="{{ route('hr.announcements.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.announcements*') ? 'active' : '' }}">
+                    <i class="fas fa-bullhorn me-2"></i>Annonces Direction
+                    @php
+                        $unreadAnnouncements = \App\Models\Announcement::getUnreadCountForUser(Auth::user());
+                        $urgentUnread = \App\Models\Announcement::getUrgentUnreadCountForUser(Auth::user());
+                        $todayMeetings = \App\Models\Announcement::getTodayMeetings()->count();
+                        $totalAnnouncementAlerts = $unreadAnnouncements + $todayMeetings;
+                    @endphp
+                    @if($totalAnnouncementAlerts > 0)
+                        <span class="badge bg-warning rounded-pill float-end notification-badge announcement-notification-badge">{{ $totalAnnouncementAlerts }}</span>
+                    @endif
+                </a>
+                
                 <a href="{{ route('hr.departments.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.departments*') ? 'active' : '' }}">
                     <i class="fas fa-building me-2"></i>Départements
                 </a>
@@ -34,7 +48,7 @@
                     <i class="fas fa-clock me-2"></i>Mon Pointage
                 </a>
                 
-                <!-- 🆕 Menu pour les rapports d'évaluation -->
+                <!-- Menu pour les rapports d'évaluation -->
                 <a href="{{ route('hr.evaluation-reports.index') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.evaluation-reports*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-check me-2"></i>Rapports d'Évaluation
                     @php
@@ -45,7 +59,7 @@
                     @endif
                 </a>
 
-                <!-- 🆕 Menu pour la gestion de paie -->
+                <!-- Menu pour la gestion de paie -->
                 <a href="{{ route('hr.payroll.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white {{ request()->routeIs('hr.payroll*') ? 'active' : '' }}">
                     <i class="fas fa-money-bill-wave me-2"></i>Gestion Paie
                     @php
@@ -92,6 +106,68 @@
                     </div>
                     
                     <div class="ms-auto">
+                        <!-- Notifications annonces Direction -->
+                        @php
+                            $unreadAnnouncements = \App\Models\Announcement::getUnreadCountForUser(Auth::user());
+                            $urgentUnread = \App\Models\Announcement::getUrgentUnreadCountForUser(Auth::user());
+                            $todayMeetings = \App\Models\Announcement::getTodayMeetings();
+                        @endphp
+                        
+                        @if($unreadAnnouncements > 0 || $todayMeetings->count() > 0 || $urgentUnread > 0)
+                        <div class="dropdown d-inline-block me-2">
+                            <button class="btn btn-outline-primary position-relative" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bullhorn"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary announcement-notification-badge">
+                                    {{ $unreadAnnouncements + $todayMeetings->count() }}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Annonces Direction</h6></li>
+                                
+                                @if($urgentUnread > 0)
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ route('hr.announcements.index', ['priority' => 'urgent', 'read_status' => 'unread']) }}">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        {{ $urgentUnread }} annonce(s) urgente(s) non lue(s)
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($unreadAnnouncements > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hr.announcements.index', ['read_status' => 'unread']) }}">
+                                        <i class="fas fa-envelope me-2 text-warning"></i>
+                                        {{ $unreadAnnouncements }} annonce(s) non lue(s)
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                @if($todayMeetings->count() > 0)
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hr.announcements.index') }}">
+                                        <i class="fas fa-calendar-day me-2 text-danger"></i>
+                                        {{ $todayMeetings->count() }} réunion(s) aujourd'hui
+                                    </a>
+                                </li>
+                                @endif
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hr.announcements.index') }}">
+                                        <i class="fas fa-list me-2"></i>
+                                        Voir toutes les annonces
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hr.announcements.global-stats') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Statistiques globales
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        @endif
+                        
                         <!-- Notifications rapides -->
                         <div class="dropdown d-inline-block me-3">
                             <button class="btn btn-outline-danger dropdown-toggle position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -175,6 +251,10 @@
                                 <i class="fas fa-user-tie me-2"></i>{{ Auth::user()->name }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><span class="dropdown-item-text"><strong>Administrateur RH</strong></span></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ route('hr.announcements.index') }}"><i class="fas fa-bullhorn me-2"></i>Annonces Direction</a></li>
+                                <li><a class="dropdown-item" href="{{ route('hr.announcements.global-stats') }}"><i class="fas fa-chart-bar me-2"></i>Stats Globales Annonces</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Profil</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Paramètres</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -220,6 +300,23 @@
     <script>
         // Auto-refresh des notifications toutes les 2 minutes
         setInterval(function() {
+            // Refresh notifications d'annonces
+            fetch('/hr/announcements/api/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.announcement-notification-badge');
+                    badges.forEach(badge => {
+                        if (data.unread_count > 0) {
+                            badge.textContent = data.unread_count;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+                
+            // Refresh général de la page pour les autres notifications
             fetch(window.location.href)
                 .then(response => response.text())
                 .then(html => {
